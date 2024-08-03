@@ -14,7 +14,7 @@ proxin is a Python tool for extracting proxies from various online sources.
 To install proxin, clone the repository and install it using pip:
 
 ```
-git clone https://github.com/yourusername/proxin
+git clone https://github.com/444995/proxin
 cd proxin
 pip install .
 ```
@@ -37,7 +37,7 @@ Here's an example of how to use proxin to extract proxies from geonode.com:
 proxin --url https://iproyal.com/free-proxy-list
 ```
 
-This will fetch and display proxies from geonode.com.
+This will fetch and display proxies from [iproyal.com](https://iproyal.com)
 
 ## Contributing
 
