@@ -50,7 +50,7 @@ class geonode(BaseSite):
 
         # if username and password:
         #     return f"{username}:{password}@{ip}:{port}"
-        
+
         if not ip or not port:
             print(f"Invalid proxy info: {proxy_info} in {self.url}")
             return None

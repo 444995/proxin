@@ -1,45 +1,64 @@
 import os
 import sys
 import importlib
-from urllib.parse import urlparse
+from .helpers import get_domain
 from .sites.base_site import BaseSite
 from .methods.base_method import BaseMethod
 from .requester import Requester
 
-def get_domain(url):
-    parsed_url = urlparse(url)
-    return f"{parsed_url.scheme}://{parsed_url.netloc}"
 
 def find_site_class(domain):
     site_path = os.path.join(os.path.dirname(__file__), 'sites')
     for file in os.listdir(site_path):
-        if file.endswith('.py') and file != 'base_site.py':
+        if file.endswith('.py') and file != 'base_site.py' and not file.startswith('unfinished__'):
             module_name = f"proxin.sites.{file[:-3]}"
             module = importlib.import_module(module_name)
             for attr in dir(module):
                 attr_value = getattr(module, attr)
                 if isinstance(attr_value, type) and issubclass(attr_value, BaseSite) and attr_value is not BaseSite:
-                    if attr_value.url == domain:
+                    if hasattr(attr_value, 'url') and attr_value.url == domain:
                         return attr_value
     return None
 
-def try_methods(site_data):
+def instantiate_site(site_class):
+    try:
+        site_instance = site_class()
+        return site_instance
+    except Exception as e:
+        raise RuntimeError(f"Error instantiating site class {site_class.__name__}: {e}")
+
+def extract_proxies_from_site(site_instance):
+    try:
+        return site_instance.extract_proxies()
+    except AttributeError as e:
+        raise RuntimeError(f"Site class {site_instance.__class__.__name__} does not implement 'extract_proxies': {e}")
+    except Exception as e:
+        raise RuntimeError(f"Error extracting proxies from site class {site_instance.__class__.__name__}: {e}")
+
+def load_methods():
     methods_path = os.path.join(os.path.dirname(__file__), 'methods')
     methods = []
-    for file in os.listdir(methods_path):
-        if file.endswith('.py') and file != 'base.py':
-            module_name = f"proxin.methods.{file[:-3]}"
+    for _file in os.listdir(methods_path):
+        if _file.endswith('.py') and _file != 'base_method.py':
+            module_name = f"proxin.methods.{_file[:-3]}"
             module = importlib.import_module(module_name)
             for attr in dir(module):
                 attr_value = getattr(module, attr)
                 if isinstance(attr_value, type) and issubclass(attr_value, BaseMethod) and attr_value is not BaseMethod:
-                    methods.append(attr_value(site_data))
+                    methods.append(attr_value)
+    return methods
+
+def try_methods(site_data):
+    methods = load_methods()
     proxies = []
-    for method in methods:
+    for method_class in methods:
+        method_instance = method_class(site_data)
         try:
-            proxies.extend(method.extract_proxies())
+            proxies.extend(method_instance.extract_proxies())
+        except AttributeError as e:
+            print(f"Method class {method_instance.__class__.__name__} does not implement 'extract_proxies': {e}")
         except Exception as e:
-            print(f"Method {method.__class__.__name__} failed: {e}")
+            print(f"Method {method_instance.__class__.__name__} failed: {e}")
     return proxies
 
 def main():
@@ -51,13 +70,23 @@ def main():
     domain = get_domain(url)
     
     site_class = find_site_class(domain)
+    proxies = []
+
     if site_class:
-        site_instance = site_class()
-        proxies = site_instance.extract_proxies()
+        try:
+            site_instance = instantiate_site(site_class)
+            proxies = extract_proxies_from_site(site_instance)
+        except RuntimeError as e:
+            print(e)
+            sys.exit(1)
     else:
         requester = Requester()
-        site_data = requester.make_request(url, as_json=False)
-        proxies = try_methods(site_data)
+        try:
+            site_data = requester.make_request(url, as_json=False)
+            proxies = try_methods(site_data)
+        except Exception as e:
+            print(f"Error requesting site data: {e}")
+            sys.exit(1)
     
     print(f"Found {len(proxies)} proxies")
     for proxy in proxies:

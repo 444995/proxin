@@ -1,18 +1,19 @@
 import time
 from .requester import Requester
-import urllib.request
-import urllib.parse
-import urllib.error
-import http.cookiejar as cookielib
-import gzip
-import json
+from urllib.parse import urlparse
+
+def get_domain(url):
+    """
+    Extracts the domain from a URL.
+    """
+    parsed_url = urlparse(url)
+    return f"{parsed_url.scheme}://{parsed_url.netloc}"
 
 def remove_duplicates_in_list(_list):
     """
     Removes duplicates from the list and returns a new list.
     """
     return list(set(_list))
-
 
 
 def fetch_pages(url, total_pages, parse_as_json=True, max_retries=5, exp_backoff_retry_delay=60):
