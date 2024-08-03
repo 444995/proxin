@@ -14,7 +14,7 @@ proxin is a Python tool for extracting proxies from various online sources.
 To install proxin, clone the repository and install it using pip:
 
 ```
-git clone https://github.com/yourusername/proxin
+git clone https://github.com/444995/proxin
 cd proxin
 pip install .
 ```
