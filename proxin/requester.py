@@ -4,7 +4,7 @@ import urllib.error
 import http.cookiejar as cookielib
 import gzip
 import json
-
+from bs4 import BeautifulSoup
 
 class Requester:
     """
@@ -23,7 +23,7 @@ class Requester:
             ('Accept-Encoding', 'gzip, deflate'),
         ]
 
-    def make_request(self, url, headers=None, params=None, data=None, as_json=True):
+    def make_request(self, url, headers=None, params=None, data=None, as_json=True, as_soup=False):
         """
         Makes a request to the given URL using urllib.
         """
@@ -34,7 +34,7 @@ class Requester:
         request = urllib.request.Request(url, data=encoded_data, headers=headers)
         
         with self.opener.open(request) as response:
-            return self._handle_response(response, as_json)
+            return self._handle_response(response, as_json, as_soup)
 
 
     @staticmethod
@@ -72,7 +72,7 @@ class Requester:
         return encoded_data
 
     @staticmethod
-    def _handle_response(response, as_json):
+    def _handle_response(response, as_json, as_soup):
         """
         Handles the response, decompressing if necessary and decoding.
         """
@@ -80,4 +80,8 @@ class Requester:
             content = gzip.GzipFile(fileobj=response).read()
         else:
             content = response.read()
+
+        if as_soup:
+            return BeautifulSoup(content, 'html.parser')
+        
         return json.loads(content) if as_json else content.decode()

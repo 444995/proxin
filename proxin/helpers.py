@@ -2,6 +2,13 @@ import time
 from .requester import Requester
 from urllib.parse import urlparse
 
+
+def keep_only_digits(text):
+    try:
+        return int(''.join(filter(str.isdigit, text)))
+    except ValueError:
+        return None
+    
 def get_domain(url):
     """
     Extracts the domain from a URL.
@@ -16,7 +23,7 @@ def remove_duplicates_in_list(_list):
     return list(set(_list))
 
 
-def fetch_pages(url, total_pages, parse_as_json=True, max_retries=5, exp_backoff_retry_delay=60):
+def fetch_pages(url, total_pages, parse_as_json=True, parse_as_soup=False, max_retries=5, exp_backoff_retry_delay=60):
     # TODO: Should proably have a normal delay and then the exp backoff is optional - set by True/False
     """
     Fetches data from a site with paginated results.
@@ -48,7 +55,7 @@ def fetch_pages(url, total_pages, parse_as_json=True, max_retries=5, exp_backoff
         attempt = 0
         while attempt <= max_retries:
             try:
-                page_data = requester.make_request(page_url, as_json=parse_as_json)
+                page_data = requester.make_request(page_url, as_json=parse_as_json, as_soup=parse_as_soup)
                 if page_data:
                     all_data.append(page_data)  # Assuming the data is under a key called 'data'
                 break  # Exit the retry loop if the request is successful
@@ -58,7 +65,7 @@ def fetch_pages(url, total_pages, parse_as_json=True, max_retries=5, exp_backoff
                     print(f"Failed to fetch page {page_num} after {max_retries} retries. Error: {e}")
                     break
                 backoff_time = exp_backoff_retry_delay * (2 ** (attempt - 1))
-                print(f"Attempt {attempt} failed. Retrying in {backoff_time} seconds...")
+                print(f"Attempt {attempt} failed because of {e}. Retrying in {backoff_time} seconds...")
                 time.sleep(backoff_time)
     
     return all_data
