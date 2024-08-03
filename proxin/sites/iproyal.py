@@ -6,8 +6,8 @@ import urllib.error
 
 class IPRoyal(BaseSite):
     url = "https://iproyal.com"
-    request_url = f"{url}/free-proxy-list/?page={{}}"
-    PROXIES_PER_PAGE = 10
+    request_url = f"{url}/free-proxy-list/?page={{}}&entries=100"
+    PROXIES_PER_PAGE = 100
 
     def __init__(self):
         self.requester = Requester()
@@ -27,7 +27,7 @@ class IPRoyal(BaseSite):
 
     def _get_total_pages(self):
         try:
-            soup = self._fetch_page(1)
+            soup = self._fetch_page(page_number=1)
             if not soup:
                 return 0
 
