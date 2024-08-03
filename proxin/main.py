@@ -13,7 +13,7 @@ def get_domain(url):
 def find_site_class(domain):
     site_path = os.path.join(os.path.dirname(__file__), 'sites')
     for file in os.listdir(site_path):
-        if file.endswith('.py') and file != 'base.py':
+        if file.endswith('.py') and file != 'base_site.py':
             module_name = f"proxin.sites.{file[:-3]}"
             module = importlib.import_module(module_name)
             for attr in dir(module):

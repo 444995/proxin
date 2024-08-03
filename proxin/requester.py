@@ -33,11 +33,8 @@ class Requester:
 
         request = urllib.request.Request(url, data=encoded_data, headers=headers)
         
-        try:
-            with self.opener.open(request) as response:
-                return self._handle_response(response, as_json)
-        except urllib.error.HTTPError as e:
-            print(f"HTTP Error: {e.code}")
+        with self.opener.open(request) as response:
+            return self._handle_response(response, as_json)
 
 
     @staticmethod
