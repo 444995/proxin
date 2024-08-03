@@ -1,6 +1,16 @@
 from .base_method import BaseMethod
+import re
+from ..helpers import remove_duplicates_in_list
 
-class Method1(BaseMethod):
+class RegexProxyExtractor(BaseMethod):
+    def __init__(self, site_data):
+        super().__init__(site_data)
+        self.proxy_pattern = re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}:\d{1,5}\b')
+
     def extract_proxies(self):
-        # Placeholder for extraction logic
-        return ["proxy3", "proxy4"]
+        if not self.site_data:
+            return []
+        
+        proxies = self.proxy_pattern.findall(self.site_data)
+        
+        return remove_duplicates_in_list(proxies)
