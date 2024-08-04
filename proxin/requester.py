@@ -27,7 +27,8 @@ class Requester:
         """
         Makes a request to the given URL using urllib.
         """
-        url = self._prepare_url(url, params)
+        if params:
+            url = self._prepare_url(url, params)
         headers = self._prepare_headers(headers, as_json)
         encoded_data = self._prepare_data(data, as_json)
 
@@ -42,8 +43,8 @@ class Requester:
         """
         Prepares the URL
         """
-        if params:
-            url += '?' + urllib.parse.urlencode(params)
+        url += '?' + urllib.parse.urlencode(params)
+        
         return url
     
     @staticmethod

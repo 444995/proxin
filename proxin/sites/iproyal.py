@@ -1,6 +1,7 @@
 from .base_site import BaseSite
 from ..requester import Requester
 from ..helpers import fetch_pages, remove_duplicates_in_list, keep_only_digits
+from ..logger import logger
 import math
 import urllib.error
 
@@ -22,7 +23,7 @@ class IPRoyal(BaseSite):
             proxies = self._parse_all_proxies(all_pages)
             return remove_duplicates_in_list(proxies)
         except Exception as e:
-            print(f"Error extracting proxies: {e}")
+            logger.error(f"Error extracting proxies: {e}")
             return []
 
     def _get_total_pages(self):
@@ -33,13 +34,13 @@ class IPRoyal(BaseSite):
 
             number_span = soup.find('span', class_='text-onInfoOutline')
             if not number_span:
-                print("Could not find the total number of proxies span")
+                logger.warning("Could not find the total number of proxies span")
                 return 0
 
             total_proxies = int(keep_only_digits(number_span.text.strip()) or 0)
             return math.ceil(total_proxies / self.PROXIES_PER_PAGE)
         except Exception as e:
-            print(f"Error getting total pages: {e}")
+            logger.error(f"Error getting total pages: {e}")
             return 0
 
     def _get_all_pages(self, total_pages):
@@ -62,7 +63,7 @@ class IPRoyal(BaseSite):
             proxy_divs = page.find_all('div', style="grid-template-columns: repeat(5, 1fr)")
             return [self._parse_proxy_div(div) for div in proxy_divs if div]
         except Exception as e:
-            print(f"Error parsing proxy page: {e}")
+            logger.error(f"Error parsing proxy page: {e}")
             return []
 
     def _parse_proxy_div(self, div):
@@ -75,14 +76,14 @@ class IPRoyal(BaseSite):
 
             return f"{ip}:{port}"
         except Exception as e:
-            print(f"Error parsing proxy div: {e}")
+            logger.error(f"Error parsing proxy div: {e}")
             return None
 
     def _fetch_page(self, page_number):
         try:
             return self.requester.make_request(self.request_url.format(page_number), as_soup=True)
         except urllib.error.HTTPError as e:
-            print(f"HTTP Error fetching page {page_number}: {e}")
+            logger.error(f"HTTP Error fetching page {page_number}: {e}")
         except Exception as e:
-            print(f"Error fetching page {page_number}: {e}")
+            logger.error(f"Error fetching page {page_number}: {e}")
         return None

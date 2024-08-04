@@ -5,7 +5,8 @@ from .helpers import get_domain
 from .sites.base_site import BaseSite
 from .methods.base_method import BaseMethod
 from .requester import Requester
-
+from .logger import logger
+from .outputter import Outputter
 
 def find_site_class(domain):
     site_path = os.path.join(os.path.dirname(__file__), 'sites')
@@ -56,19 +57,19 @@ def try_methods(site_data):
         try:
             proxies.extend(method_instance.extract_proxies())
         except AttributeError as e:
-            print(f"Method class {method_instance.__class__.__name__} does not implement 'extract_proxies': {e}")
+            logger.error(f"Method class {method_instance.__class__.__name__} does not implement 'extract_proxies': {e}")
         except Exception as e:
-            print(f"Method {method_instance.__class__.__name__} failed: {e}")
+            logger.error(f"Method {method_instance.__class__.__name__} failed: {e}")
     return proxies
 
 def main():
     if len(sys.argv) < 3 or sys.argv[1] != '--url':
         print("Usage: proxin --url <url>")
         sys.exit(1)
-    
+
     url = sys.argv[2]
     domain = get_domain(url)
-    
+
     site_class = find_site_class(domain)
     proxies = []
 
@@ -77,7 +78,7 @@ def main():
             site_instance = instantiate_site(site_class)
             proxies = extract_proxies_from_site(site_instance)
         except RuntimeError as e:
-            print(e)
+            logger.error(e)
             sys.exit(1)
     else:
         requester = Requester()
@@ -85,13 +86,14 @@ def main():
             site_data = requester.make_request(url, as_json=False)
             proxies = try_methods(site_data)
         except Exception as e:
-            print(f"Error requesting site data: {e}")
+            logger.error(f"Error requesting site data: {e}")
             sys.exit(1)
+
+    logger.debug(f"Found {len(proxies)} proxies")
     
-    print(f"Found {len(proxies)} proxies")
-    for proxy in proxies:
-        print(proxy)
-        input('Press Enter to get next proxy')
+    outputter = Outputter(output_folder="results")
+    outputter.output_result(proxies)
+
 
 if __name__ == "__main__":
     main()
