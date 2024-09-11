@@ -3,7 +3,6 @@ from datetime import datetime
 
 class Outputter:
     def __init__(self, output_folder):
-        self.default_file_name = "proxies"
         self.output_folder = output_folder
         os.makedirs(self.output_folder, exist_ok=True)
     
@@ -12,8 +11,8 @@ class Outputter:
         return datetime.now().strftime('%Y_%m_%d-%H_%M_%S')
 
     @staticmethod
-    def _establish_filename(output_folder, current_time, filename):
-        return os.path.join(output_folder, f"[{current_time}]_{filename}.txt")
+    def _establish_filename(output_folder, current_time):
+        return os.path.join(output_folder, f"[{current_time}].txt")
     
     @staticmethod
     def _increment_file_name(file_path):
@@ -25,7 +24,6 @@ class Outputter:
         file_path = self._establish_filename(
             self.output_folder, 
             current_time, 
-            self.default_file_name
         )
 
         counter = 1

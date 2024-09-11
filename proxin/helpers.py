@@ -1,7 +1,8 @@
 import time
-from .requester import Requester
+from proxin.requester import Requester
 from urllib.parse import urlparse
-from .logger import logger
+from proxin.logger import logger
+import re
 
 def keep_only_digits(text):
     try:
@@ -9,6 +10,10 @@ def keep_only_digits(text):
     except ValueError:
         logger.debug(f"Could not extract digits from text: {text}")
         return None
+    
+def clean_proxy_string(proxy_string):
+    return re.search(r'\b(?:\d{1,3}\.){3}\d{1,3}:\d+\b', proxy_string).group(0) \
+            if re.search(r'\b(?:\d{1,3}\.){3}\d{1,3}:\d+\b', proxy_string) else ""
 
 def get_domain(url):
     """
@@ -17,11 +22,11 @@ def get_domain(url):
     parsed_url = urlparse(url)
     return f"{parsed_url.scheme}://{parsed_url.netloc}"
 
-def remove_duplicates_in_list(_list):
+def remove_duplicates_in_list(input_list):
     """
-    Removes duplicates from the list and returns a new list.
+    Removes duplicates and *empty lines* from the list and returns a new list.
     """
-    return list(set(_list))
+    return list(set(item.strip() for item in input_list if item.strip()))
 
 def fetch_pages(url, total_pages, parse_as_json=True, parse_as_soup=False, max_retries=5, exp_backoff_retry_delay=60):
     # TODO: Should probably have a normal delay and then the exp backoff is optional - set by True/False

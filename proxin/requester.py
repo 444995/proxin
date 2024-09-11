@@ -40,7 +40,7 @@ class Requester:
             with self.opener.open(request) as response:
                 return self._handle_response(response, as_json, as_soup)
         except urllib.error.HTTPError as e:
-            logger.error(f"HTTP Error: {e}")
+            logger.error(f"HTTP Error ('{url}'): {e}")
         except Exception as e:
             logger.error(f"Error making request: {e}")
 
