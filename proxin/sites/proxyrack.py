@@ -1,12 +1,13 @@
 from .base_site import BaseSite
-from proxin.requester import Requester
-from proxin.helpers import fetch_pages, remove_duplicates_in_list, keep_only_digits
-from proxin.logger import logger
+from ..requester import Requester
+from ..helpers import fetch_pages, remove_duplicates_in_list, keep_only_digits
+from ..logger import logger
 import math
+import urllib.error
 
-class IPRoyal(BaseSite):
-    url = "https://iproyal.com"
-    request_url = f"{url}/free-proxy-list/?page={{}}&entries=100"
+class Proxyrack(BaseSite):
+    url = "https://proxyrack.com"
+    request_url = f"https://proxyfinder.proxyrack.com/proxies.json?perPage=100&offset=100"
     PROXIES_PER_PAGE = 100
 
     def __init__(self):
@@ -18,12 +19,7 @@ class IPRoyal(BaseSite):
             if total_pages == 0:
                 return []
 
-            all_pages = fetch_pages(
-                url=self.request_url,
-                total_pages=total_pages,
-                parse_as_json=False,
-                parse_as_soup=True,
-            )
+            all_pages = self._get_all_pages(total_pages)
             proxies = self._parse_all_proxies(all_pages)
             return remove_duplicates_in_list(proxies)
         except Exception as e:
@@ -32,10 +28,7 @@ class IPRoyal(BaseSite):
 
     def _get_total_pages(self):
         try:
-            soup = self.requester.make_request(
-                self.request_url.format(1), 
-                as_soup=True
-            )
+            soup = self._fetch_page(page_number=1)
             if not soup:
                 return 0
 
@@ -46,10 +39,17 @@ class IPRoyal(BaseSite):
 
             total_proxies = int(keep_only_digits(number_span.text.strip()) or 0)
             return math.ceil(total_proxies / self.PROXIES_PER_PAGE)
-        
         except Exception as e:
             logger.error(f"Error getting total pages: {e}")
             return 0
+
+    def _get_all_pages(self, total_pages):
+        return fetch_pages(
+            url=self.request_url,
+            total_pages=total_pages,
+            parse_as_json=False,
+            parse_as_soup=True,
+        )
 
     def _parse_all_proxies(self, pages):
         all_proxies = []
@@ -78,3 +78,12 @@ class IPRoyal(BaseSite):
         except Exception as e:
             logger.error(f"Error parsing proxy div: {e}")
             return None
+
+    def _fetch_page(self, page_number):
+        try:
+            return self.requester.make_request(self.request_url.format(page_number), as_soup=True)
+        except urllib.error.HTTPError as e:
+            logger.error(f"HTTP Error fetching page {page_number}: {e}")
+        except Exception as e:
+            logger.error(f"Error fetching page {page_number}: {e}")
+        return None

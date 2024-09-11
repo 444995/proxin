@@ -16,10 +16,6 @@ class Outputter:
         return os.path.join(output_folder, f"[{current_time}]_{filename}.txt")
     
     @staticmethod
-    def _file_exists(file_path):
-        return os.path.exists(file_path)
-    
-    @staticmethod
     def _increment_file_name(file_path):
         name, ext = os.path.splitext(file_path)
         return f"{name}_1{ext}"
@@ -33,7 +29,7 @@ class Outputter:
         )
 
         counter = 1
-        while self._file_exists(file_path):
+        while os.path.exists(file_path):
             name, ext = os.path.splitext(file_path)
             file_path = f"{name[:-2] if name.endswith('_' + str(counter-1)) else name}_{counter}{ext}"
             counter += 1

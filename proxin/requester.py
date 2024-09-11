@@ -6,6 +6,8 @@ import gzip
 import json
 from bs4 import BeautifulSoup
 
+from proxin.logger import logger
+
 class Requester:
     """
     A class to make requests using urllib and handle the responses.
@@ -32,11 +34,17 @@ class Requester:
         headers = self._prepare_headers(headers, as_json)
         encoded_data = self._prepare_data(data, as_json)
 
-        request = urllib.request.Request(url, data=encoded_data, headers=headers)
-        
-        with self.opener.open(request) as response:
-            return self._handle_response(response, as_json, as_soup)
+        try:
+            request = urllib.request.Request(url, data=encoded_data, headers=headers)
+            
+            with self.opener.open(request) as response:
+                return self._handle_response(response, as_json, as_soup)
+        except urllib.error.HTTPError as e:
+            logger.error(f"HTTP Error: {e}")
+        except Exception as e:
+            logger.error(f"Error making request: {e}")
 
+        return None
 
     @staticmethod
     def _prepare_url(url, params):
